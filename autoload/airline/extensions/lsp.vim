@@ -61,7 +61,32 @@ function! airline#extensions#lsp#get_error() abort
   return airline#extensions#lsp#get('error')
 endfunction
 
+let g:airline#extensions#lsp#timer = 0
+function! airline#extensions#lsp#progress() abort
+  if get(w:, 'airline_active', 0)
+    if g:lsp_progress['messages'] != '' && g:lsp_progress['percentage'] != 100
+      if g:airline#extensions#lsp#timer == 0
+        let s:title = g:lsp_progress['title']
+        let g:airline#extensions#lsp#timer = timer_start(
+              \ 300,
+              \ 'airline#extensions#lsp#update', {'repeat' : -1})
+      endif
+      let messages = airline#util#shorten(g:lsp_progress['messages'] . ' ' . string(round(g:lsp_progress['percentage']*10)/10) . '%', 91, 9)
+      return s:title . ' ' . messages
+    endif
+    call timer_stop(g:airline#extensions#lsp#timer)
+    let g:airline#extensions#lsp#timer = 0
+    return ''
+  endif
+endfunction
+
 function! airline#extensions#lsp#init(ext) abort
   call airline#parts#define_function('lsp_error_count', 'airline#extensions#lsp#get_error')
   call airline#parts#define_function('lsp_warning_count', 'airline#extensions#lsp#get_warning')
+  call airline#parts#define_function('lsp_progress', 'airline#extensions#lsp#progress')
 endfunction
+
+function! airline#extensions#lsp#update(timer)
+  call airline#update_statusline()
+endfunction
+
