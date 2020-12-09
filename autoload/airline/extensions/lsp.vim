@@ -64,7 +64,7 @@ endfunction
 let g:airline#extensions#lsp#timer = 0
 function! airline#extensions#lsp#progress() abort
   if get(w:, 'airline_active', 0)
-    if g:lsp_progress['messages'] != '' && g:lsp_progress['percentage'] != 100
+    if exists('g:lsp_progress') && g:lsp_progress['messages'] != '' && g:lsp_progress['percentage'] != 100
       if g:airline#extensions#lsp#timer == 0
         let s:title = g:lsp_progress['title']
         let g:airline#extensions#lsp#timer = timer_start(
