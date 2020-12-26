@@ -64,14 +64,21 @@ endfunction
 let g:airline#extensions#lsp#timer = 0
 function! airline#extensions#lsp#progress() abort
   if get(w:, 'airline_active', 0)
-    if exists('g:lsp_progress') && g:lsp_progress['messages'] != '' && g:lsp_progress['percentage'] != 100
+    if exists('g:lsp_progress')
+          \ && g:lsp_progress['messages'] != ''
+          \ && g:lsp_progress['percentage'] != 100
+      let percent = ''
+      if type(g:lsp_progress['percentage']) == v:t_number
+            \ || type(g:lsp_progress['percentage']) == v:t_float
+        let percent = ' ' . string(abs(round(g:lsp_progress['percentage']*10))/10) . '%'
+      endif
       if g:airline#extensions#lsp#timer == 0
         let s:title = g:lsp_progress['title']
         let g:airline#extensions#lsp#timer = timer_start(
               \ 300,
               \ 'airline#extensions#lsp#update', {'repeat' : -1})
       endif
-      let messages = airline#util#shorten(g:lsp_progress['messages'] . ' ' . string(round(g:lsp_progress['percentage']*10)/10) . '%', 91, 9)
+      let messages = airline#util#shorten(g:lsp_progress['messages'] . percent, 91, 9)
       return s:title . ' ' . messages
     endif
     call timer_stop(g:airline#extensions#lsp#timer)
