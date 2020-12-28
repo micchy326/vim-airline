@@ -66,6 +66,9 @@ function! airline#extensions#lsp#progress() abort
   if get(w:, 'airline_active', 0)
     if exists('*lsp#get_progress')
       let l:lsp_progress = lsp#get_progress()
+      if len(l:lsp_progress) == 0 | return '' | endif
+      " show only most new progress
+      let l:lsp_progress = l:lsp_progress[0]
       if l:lsp_progress['messages'] != '' && l:lsp_progress['percentage'] != 100.0
         let percent = ''
         if l:lsp_progress['percentage'] >= 0.0
