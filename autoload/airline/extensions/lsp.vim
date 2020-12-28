@@ -66,10 +66,9 @@ function! airline#extensions#lsp#progress() abort
   if get(w:, 'airline_active', 0)
     if exists('*lsp#get_progress')
       let l:lsp_progress = lsp#get_progress()
-      if l:lsp_progress['messages'] != '' && l:lsp_progress['percentage'] != 100
+      if l:lsp_progress['messages'] != '' && l:lsp_progress['percentage'] != 100.0
         let percent = ''
-        if type(l:lsp_progress['percentage']) == v:t_number
-              \ || type(l:lsp_progress['percentage']) == v:t_float
+        if l:lsp_progress['percentage'] >= 0.0
           let percent = ' ' . string(abs(round(l:lsp_progress['percentage']*10))/10) . '%'
         endif
         if g:airline#extensions#lsp#timer == 0
