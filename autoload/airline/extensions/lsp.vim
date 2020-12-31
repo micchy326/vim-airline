@@ -61,30 +61,25 @@ function! airline#extensions#lsp#get_error() abort
   return airline#extensions#lsp#get('error')
 endfunction
 
-let g:airline#extensions#lsp#timer = 0
+let s:lsp_progress = []
 function! airline#extensions#lsp#progress() abort
   if get(w:, 'airline_active', 0)
     if exists('*lsp#get_progress')
-      let l:lsp_progress = lsp#get_progress()
-      if len(l:lsp_progress) == 0 | return '' | endif
+      let s:lsp_progress = lsp#get_progress()
+
+      if len(s:lsp_progress) == 0 | return '' | endif
+      
       " show only most new progress
-      let l:lsp_progress = l:lsp_progress[0]
-      if l:lsp_progress['messages'] != '' && l:lsp_progress['percentage'] != 100.0
+      let s:lsp_progress = s:lsp_progress[0]
+      if s:lsp_progress['message'] != '' && s:lsp_progress['percentage'] != 100
         let percent = ''
-        if l:lsp_progress['percentage'] >= 0.0
-          let percent = ' ' . string(abs(round(l:lsp_progress['percentage']*10))/10) . '%'
+        if s:lsp_progress['percentage'] >= 0
+          let percent = ' ' . string(s:lsp_progress['percentage']) . '%'
         endif
-        if g:airline#extensions#lsp#timer == 0
-          let s:title = l:lsp_progress['title']
-          let g:airline#extensions#lsp#timer = timer_start(
-                \ 300,
-                \ 'airline#extensions#lsp#update', {'repeat' : -1})
-        endif
-        let messages = airline#util#shorten(l:lsp_progress['messages'] . percent, 91, 9)
-        return l:lsp_progress['server'] . ':' . s:title . ' ' . messages
+        let s:title = s:lsp_progress['title']
+        let message = airline#util#shorten(s:lsp_progress['message'] . percent, 91, 9)
+        return s:lsp_progress['server'] . ':' . s:title . ' ' . message
       endif
-      call timer_stop(g:airline#extensions#lsp#timer)
-      let g:airline#extensions#lsp#timer = 0
       return ''
     endif
   endif
@@ -94,9 +89,21 @@ function! airline#extensions#lsp#init(ext) abort
   call airline#parts#define_function('lsp_error_count', 'airline#extensions#lsp#get_error')
   call airline#parts#define_function('lsp_warning_count', 'airline#extensions#lsp#get_warning')
   call airline#parts#define_function('lsp_progress', 'airline#extensions#lsp#progress')
+  autocmd User lsp_progress_updated call airline#extensions#lsp#update()
 endfunction
 
-function! airline#extensions#lsp#update(timer)
-  call airline#update_statusline()
+
+function! s:stop_timer(timer) abort
+  call timer_stop(a:timer)
+  let s:timer = 0
 endfunction
 
+let s:timer = 0
+let s:ignore_time = 0
+function! airline#extensions#lsp#update() abort
+  if reltimefloat(reltime()) - s:ignore_time >= 0.3
+        \ || len(s:lsp_progress) == 0
+    call airline#update_statusline()
+    let s:ignore_time = reltimefloat(reltime())
+  endif
+endfunction
