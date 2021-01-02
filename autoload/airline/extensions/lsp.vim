@@ -85,25 +85,20 @@ function! airline#extensions#lsp#progress() abort
   endif
 endfunction
 
+let s:timer = 0
+let s:ignore_time = 0
+function! airline#extensions#lsp#update() abort
+  if reltimefloat(reltime()) - s:ignore_time >=
+        \ get(g:, 'lightline_lsp_progress_skip_time', 0.3)
+        \ || len(s:lsp_progress) == 0
+    call airline#update_statusline()
+    let s:ignore_time = reltimefloat(reltime())
+  endif
+endfunction
+
 function! airline#extensions#lsp#init(ext) abort
   call airline#parts#define_function('lsp_error_count', 'airline#extensions#lsp#get_error')
   call airline#parts#define_function('lsp_warning_count', 'airline#extensions#lsp#get_warning')
   call airline#parts#define_function('lsp_progress', 'airline#extensions#lsp#progress')
   autocmd User lsp_progress_updated call airline#extensions#lsp#update()
-endfunction
-
-
-function! s:stop_timer(timer) abort
-  call timer_stop(a:timer)
-  let s:timer = 0
-endfunction
-
-let s:timer = 0
-let s:ignore_time = 0
-function! airline#extensions#lsp#update() abort
-  if reltimefloat(reltime()) - s:ignore_time >= 0.3
-        \ || len(s:lsp_progress) == 0
-    call airline#update_statusline()
-    let s:ignore_time = reltimefloat(reltime())
-  endif
 endfunction
